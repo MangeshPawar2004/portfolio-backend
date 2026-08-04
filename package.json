@@ -2,7 +2,8 @@
   "name": "portfolio-backend",
   "version": "1.0.0",
   "description": "backend of a portfolio website",
-  "main": "index.js",
+  "main": "server.js",
+  "type": "module",
  "scripts": {
     "start":      "node server.js",
     "dev":        "nodemon server.js",
