@@ -62,14 +62,13 @@ const ProjectSchema = new Schema(
 );
 
 // Auto-generate slug from title
-ProjectSchema.pre("save", async function (next) {
-  if (!this.isModified("title")) return next();
+ProjectSchema.pre("save", async function () {
+  if (!this.isModified("title")) return;
   let slug = slugify(this.title, { lower: true, strict: true });
   // Ensure uniqueness
   const exists = await mongoose.model("Project").findOne({ slug, _id: { $ne: this._id } });
   if (exists) slug = `${slug}-${Date.now()}`;
   this.slug = slug;
-  next();
 });
 
 ProjectSchema.index({ slug: 1 });

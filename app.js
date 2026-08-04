@@ -3,10 +3,10 @@ import cors from "cors";
 import helmet from "helmet";
 import morgan from "morgan";
 import cookieParser from "cookie-parser";
-import mongoSanitize from "express-mongo-sanitize";
 import { env } from "./src/config/env.js";
 import router from "./src/routes/index.js";
 import { errorHandler } from "./src/middleware/errorHandler.middleware.js";
+import { sanitizeInput } from "./src/middleware/sanitize.middleware.js";
 
 const app = express();
 
@@ -22,7 +22,7 @@ app.use(cors({
 app.use(express.json({ limit: "16kb" }));
 app.use(express.urlencoded({ extended: true, limit: "16kb" }));
 app.use(cookieParser());
-app.use(mongoSanitize()); // prevent NoSQL injection
+app.use(sanitizeInput);
 
 // ── Logging ─────────────────────────────────────────────────
 if (env.nodeEnv !== "test") {

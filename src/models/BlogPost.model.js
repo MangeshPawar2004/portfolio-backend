@@ -23,8 +23,8 @@ const BlogPostSchema = new Schema(
   { timestamps: true }
 );
 
-BlogPostSchema.pre("save", async function (next) {
-  if (!this.isModified("title")) return next();
+BlogPostSchema.pre("save", async function () {
+  if (!this.isModified("title")) return;
   let slug = slugify(this.title, { lower: true, strict: true });
   const exists = await mongoose.model("BlogPost").findOne({ slug, _id: { $ne: this._id } });
   if (exists) slug = `${slug}-${Date.now()}`;
@@ -35,16 +35,13 @@ BlogPostSchema.pre("save", async function (next) {
     const wordCount = this.content.split(/\s+/).length;
     this.readTimeMinutes = Math.max(1, Math.round(wordCount / 200));
   }
-
-  next();
 });
 
 // Auto-set publishedAt when status flips to published
-BlogPostSchema.pre("save", function (next) {
+BlogPostSchema.pre("save", function () {
   if (this.isModified("status") && this.status === "published" && !this.publishedAt) {
     this.publishedAt = new Date();
   }
-  next();
 });
 
 BlogPostSchema.index({ slug: 1 });
