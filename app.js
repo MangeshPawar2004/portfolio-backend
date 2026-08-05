@@ -12,11 +12,17 @@ const app = express();
 
 // ── Security ────────────────────────────────────────────────
 app.use(helmet());
+// In app.js — replace the existing cors() call
 app.use(cors({
-  origin: env.clientUrl,
+  origin: [
+    'http://localhost:3000',
+    'http://localhost:5173',                          // Vite dev
+    'https://your-portfolio.vercel.app',              // ← add your Vercel domain
+    process.env.CLIENT_URL,
+  ].filter(Boolean),
   credentials: true,
-  methods: ["GET", "POST", "PUT", "PATCH", "DELETE"],
-}));
+  methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE'],
+}))
 
 // ── Body Parsing ────────────────────────────────────────────
 app.use(express.json({ limit: "16kb" }));
