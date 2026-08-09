@@ -22,8 +22,15 @@ export const submitContact = asyncHandler(async (req, res) => {
   res.status(201).json(new ApiResponse(201, msg, "Message sent successfully"));
 });
 
+// GET /contact/unread-count — protected
+export const getUnreadCount = asyncHandler(async (req, res) => {
+  const count = await ContactMessage.countDocuments({ status: "unread" });
+  res.status(200).json(new ApiResponse(200, { count }, "Unread count fetched"));
+});
+
 // GET /contact — protected
 export const getMessages = asyncHandler(async (req, res) => {
+
   const filter = {};
   if (req.query.status) filter.status = req.query.status;
   if (req.query.spam) filter.isSpam = req.query.spam === "true";

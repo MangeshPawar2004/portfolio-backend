@@ -3,6 +3,7 @@ import {
   projectMediaStorage,
   avatarStorage,
   resumeStorage,
+  genericStorage,
 } from "../config/cloudinary.js";
 
 const fileSizeLimit = 10 * 1024 * 1024; // 10 MB
@@ -32,3 +33,8 @@ export const uploadResume = multer({
       : cb(new Error("Only PDF files are allowed"), false);
   },
 }).single("resume");
+
+export const uploadGeneric = multer({
+  storage: genericStorage,
+  limits: { fileSize: 10 * 1024 * 1024 },
+}).single("file");

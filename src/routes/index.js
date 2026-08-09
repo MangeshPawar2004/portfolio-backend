@@ -13,6 +13,8 @@ import { Certificate } from "../models/Certificate.model.js";
 import { Testimonial } from "../models/Testimonial.model.js";
 import { SocialLink }  from "../models/SocialLink.model.js";
 
+import uploadRoutes      from "./upload.routes.js";
+
 const router = Router();
 
 router.use("/auth",          authRoutes);
@@ -20,7 +22,9 @@ router.use("/projects",      projectRoutes);
 router.use("/settings",      settingsRoutes);
 router.use("/contact",       contactRoutes);
 router.use("/blog",          blogRoutes);
+router.use("/upload",        uploadRoutes);
 router.use("/skills",        createCRUDRouter(Skill));
+
 router.use("/experience",    createCRUDRouter(Experience));
 router.use("/education",     createCRUDRouter(Education));
 router.use("/certificates",  createCRUDRouter(Certificate));
