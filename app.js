@@ -10,8 +10,9 @@ import { sanitizeInput } from "./src/middleware/sanitize.middleware.js";
 
 const app = express();
 
-// ── Security ────────────────────────────────────────────────
-app.use(helmet());
+app.use(helmet({
+  crossOriginResourcePolicy: { policy: "cross-origin" }
+}));
 // In app.js — replace the existing cors() call
 app.use(cors({
   origin: [
