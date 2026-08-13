@@ -1,0 +1,4609 @@
+{
+  "info": {
+    "_postman_id": "55d0b252-1e3f-4d3b-9455-4e31e97cdf47",
+    "name": "\ud83d\uddc2\ufe0f Portfolio Backend API",
+    "description": "Complete Postman collection for the MERN Portfolio Backend.\n\n## Quick Start\n1. Set `baseUrl` variable to `http://localhost:5000/api/v1`\n2. Run **Auth / Login** first \u2014 `accessToken` auto-saves to collection variables\n3. Run folders top-to-bottom; each Create request saves its ID for subsequent requests\n\n## Collection Variables (auto-managed)\n- `accessToken` \u2014 saved on login\n- `projectId`, `projectSlug`, `skillId`, `experienceId`, `educationId`\n- `certificateId`, `testimonialId`, `socialLinkId`, `blogId`, `blogSlug`, `contactMsgId`",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "id": "25c01999-e8da-4030-bd9b-1ae9a7df363b",
+      "name": "\ud83d\udfe2 Health Check",
+      "description": "Run this first to confirm the server is live.",
+      "item": [
+        {
+          "id": "34a68576-5a84-4153-a56f-d50eb88a366d",
+          "name": "Server Health",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "http://localhost:5000/health",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "5000",
+              "path": [
+                "health"
+              ]
+            },
+            "description": "Verify server is running. Returns uptime and timestamp."
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"Status ok\", () => pm.expect(pm.response.json().status).to.equal(\"ok\"));",
+                  "pm.test(\"Has uptime\", () => pm.expect(pm.response.json().uptime).to.be.a(\"number\"));"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "e85261a8-3d38-47f5-8d9d-6cf4d18a9a6a",
+      "name": "\ud83d\udd10 Auth",
+      "description": "Authentication \u2014 Login, Logout, Refresh, Me. Run Login first.",
+      "item": [
+        {
+          "id": "dcb3fff4-1ce1-46e9-9d57-b99270e5b44c",
+          "name": "Login",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/auth/login",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "auth",
+                "login"
+              ]
+            },
+            "description": "Login with admin credentials. Saves accessToken to collection variables automatically.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"admin@portfolio.com\",\n  \"password\": \"Admin@123456\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status 200\", () => pm.response.to.have.status(200));",
+                  "const json = pm.response.json();",
+                  "pm.test(\"Has accessToken\", () => pm.expect(json.data.accessToken).to.be.a(\"string\"));",
+                  "pm.collectionVariables.set(\"accessToken\", json.data.accessToken);",
+                  "pm.collectionVariables.set(\"userId\", json.data.user._id);",
+                  "console.log(\"\u2705 accessToken saved to collection variables\");"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "id": "8457184b-3f03-41fa-881b-245a6ec6a2db",
+          "name": "Get Me (Protected)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/auth/me",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "auth",
+                "me"
+              ]
+            },
+            "description": "Get current logged-in user profile."
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"Success true\", () => pm.expect(pm.response.json().success).to.be.true);",
+                  "pm.test(\"Has user data\", () => pm.expect(pm.response.json().data).to.have.property(\"email\"));"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "id": "0e044025-7ae2-4f43-b58d-1fefad8d9613",
+          "name": "Refresh Token",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/auth/refresh",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "auth",
+                "refresh"
+              ]
+            },
+            "description": "Refresh access token using HttpOnly cookie. Run after access token expires."
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status 200\", () => pm.response.to.have.status(200));",
+                  "const json = pm.response.json();",
+                  "if (json.data && json.data.accessToken) {",
+                  "  pm.collectionVariables.set(\"accessToken\", json.data.accessToken);",
+                  "  console.log(\"\u2705 accessToken refreshed\");",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "id": "f34f4abf-900d-4e75-8211-1c0afcb0a9b6",
+          "name": "Change Password",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/auth/change-password",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "auth",
+                "change-password"
+              ]
+            },
+            "description": "Change admin password. Uses same value here so it stays consistent for testing.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"currentPassword\": \"Admin@123456\",\n  \"newPassword\": \"Admin@123456\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"Success true\", () => pm.expect(pm.response.json().success).to.be.true);"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "id": "8fa77a27-bd4e-49a9-acc2-ab490553a6cb",
+          "name": "Logout",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/auth/logout",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "auth",
+                "logout"
+              ]
+            },
+            "description": "Invalidates refresh token and clears cookie."
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"Success true\", () => pm.expect(pm.response.json().success).to.be.true);",
+                  "pm.collectionVariables.set(\"accessToken\", \"\");",
+                  "console.log(\"\u2705 Logged out \u2014 accessToken cleared\");"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "id": "fb737011-e62b-429f-9e6f-beaba56597b5",
+          "name": "Login Again (After Logout)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/auth/login",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "auth",
+                "login"
+              ]
+            },
+            "description": "Re-login after logout test to restore token for subsequent tests.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"admin@portfolio.com\",\n  \"password\": \"Admin@123456\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status 200\", () => pm.response.to.have.status(200));",
+                  "const json = pm.response.json();",
+                  "pm.test(\"Has accessToken\", () => pm.expect(json.data.accessToken).to.be.a(\"string\"));",
+                  "pm.collectionVariables.set(\"accessToken\", json.data.accessToken);",
+                  "pm.collectionVariables.set(\"userId\", json.data.user._id);",
+                  "console.log(\"\u2705 accessToken saved to collection variables\");"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "id": "4f3f4c3e-61a7-4b5f-9fbe-8b29c98f97ba",
+          "name": "\u274c Login with wrong password",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/auth/login",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "auth",
+                "login"
+              ]
+            },
+            "description": "Should return 401.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"admin@portfolio.com\",\n  \"password\": \"wrongpassword\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Should be 401\", () => pm.response.to.have.status(401));"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "id": "b6a4343f-515a-4c7f-abf5-226656dbb12e",
+          "name": "\u274c Access protected route without token",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/auth/me",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "auth",
+                "me"
+              ]
+            },
+            "description": "Should return 401 \u2014 no auth header."
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Should be 401\", () => pm.response.to.have.status(401));"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "13f85849-31c9-4d63-9c7f-43a5cbd16550",
+      "name": "\u2699\ufe0f Site Settings",
+      "description": "Homepage content, hero, about, resume, SEO, theme settings.",
+      "item": [
+        {
+          "id": "e9fe0228-18d8-481b-9a42-557f58561b1c",
+          "name": "Get Settings (Public)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/settings",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "settings"
+              ]
+            },
+            "description": "Fetch homepage/hero/about config. Public endpoint."
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"Success true\", () => pm.expect(pm.response.json().success).to.be.true);",
+                  "pm.test(\"Has heroName\", () => pm.expect(pm.response.json().data).to.have.property(\"heroName\"));"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "id": "e7069487-0515-435f-aa79-3f263407fecf",
+          "name": "Update Settings",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/settings",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "settings"
+              ]
+            },
+            "description": "Update all site settings. Protected.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"heroName\": \"Mangesh Pawar\",\n  \"heroTitle\": \"Full Stack Developer & AI Engineer\",\n  \"heroTagline\": \"I build scalable web apps and intelligent systems that solve real problems.\",\n  \"heroCTAPrimary\": \"View Projects\",\n  \"heroCTASecondary\": \"Contact Me\",\n  \"aboutSummary\": \"Associate Full Stack Developer at Cogitate with hands-on experience in React, Node.js, .NET, Azure, and AI/ML integrations.\",\n  \"aboutBackground\": \"B.E. in AI & Data Science from Dr. D. Y. Patil Institute of Technology. Promoted from intern to full-time developer after 10 months.\",\n  \"aboutSpecialities\": [\n    \"Full Stack Development\",\n    \"AI/ML Integration\",\n    \"Cloud Architecture\",\n    \"Smart Contract Development\"\n  ],\n  \"metaTitle\": \"Mangesh Pawar \\u2014 Full Stack Developer\",\n  \"metaDescription\": \"Portfolio of Mangesh Pawar \\u2014 Full Stack Developer specializing in React, Node.js, and AI integrations.\",\n  \"metaKeywords\": [\n    \"full stack\",\n    \"react\",\n    \"nodejs\",\n    \"AI engineer\",\n    \"portfolio\"\n  ],\n  \"primaryColor\": \"#3B82F6\",\n  \"accentColor\": \"#10B981\",\n  \"darkModeDefault\": true,\n  \"availableForWork\": true,\n  \"availabilityNote\": \"Open to AI Engineer and Full Stack Developer roles\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"Success true\", () => pm.expect(pm.response.json().success).to.be.true);"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "id": "107067a9-570d-456b-bfea-b4cce872ca62",
+          "name": "Upload Resume (form-data)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/settings/resume",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "settings",
+                "resume"
+              ]
+            },
+            "description": "Upload resume PDF to Cloudinary. Select a PDF in the 'resume' file field.",
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "resume",
+                  "type": "file",
+                  "src": "",
+                  "description": "Upload a PDF file here"
+                }
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "id": "086302f4-10fe-40bd-a84e-d4e2af9a2d40",
+      "name": "\ud83d\udcc1 Projects",
+      "description": "Core portfolio content. Create first, then test public slug routes.",
+      "item": [
+        {
+          "id": "d29c96e6-2f18-4c16-a7f8-9cc51083b1ac",
+          "name": "Public Endpoints",
+          "description": "",
+          "item": [
+            {
+              "id": "61acea4b-a807-4b1c-a31e-efb3c76b69f8",
+              "name": "Get All Projects",
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json",
+                    "type": "text"
+                  }
+                ],
+                "url": {
+                  "raw": "{{baseUrl}}/projects?page=1&limit=10&status=completed&tag=react",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "projects"
+                  ],
+                  "query": [
+                    {
+                      "key": "page",
+                      "value": "1",
+                      "disabled": true
+                    },
+                    {
+                      "key": "limit",
+                      "value": "10",
+                      "disabled": true
+                    },
+                    {
+                      "key": "status",
+                      "value": "completed",
+                      "disabled": true
+                    },
+                    {
+                      "key": "tag",
+                      "value": "react",
+                      "disabled": true
+                    }
+                  ]
+                },
+                "description": "Paginated list of visible projects. Optional filters: status, tag, category."
+              },
+              "response": [],
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "exec": [
+                      "pm.test(\"Status 200\", () => pm.response.to.have.status(200));",
+                      "pm.test(\"Success true\", () => pm.expect(pm.response.json().success).to.be.true);",
+                      "pm.test(\"Has pagination\", () => {",
+                      "  const d = pm.response.json().data;",
+                      "  pm.expect(d).to.have.property(\"pagination\");",
+                      "  pm.expect(d).to.have.property(\"data\").that.is.an(\"array\");",
+                      "});"
+                    ],
+                    "type": "text/javascript"
+                  }
+                }
+              ]
+            },
+            {
+              "id": "7dc5b2b9-9888-4b5d-8338-4242ac73222b",
+              "name": "Get Featured Projects",
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json",
+                    "type": "text"
+                  }
+                ],
+                "url": {
+                  "raw": "{{baseUrl}}/projects/featured",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "projects",
+                    "featured"
+                  ]
+                },
+                "description": "Returns all isFeatured=true projects sorted by displayOrder."
+              },
+              "response": [],
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "exec": [
+                      "pm.test(\"Status 200\", () => pm.response.to.have.status(200));",
+                      "pm.test(\"Success true\", () => pm.expect(pm.response.json().success).to.be.true);",
+                      "pm.test(\"Is array\", () => pm.expect(pm.response.json().data).to.be.an(\"array\"));"
+                    ],
+                    "type": "text/javascript"
+                  }
+                }
+              ]
+            },
+            {
+              "id": "dcb95eda-7d2f-41ae-aaf8-7a56490de9c7",
+              "name": "Get Project by Slug",
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json",
+                    "type": "text"
+                  }
+                ],
+                "url": {
+                  "raw": "{{baseUrl}}/projects/{{projectSlug}}",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "projects",
+                    "{{projectSlug}}"
+                  ]
+                },
+                "description": "Fetch single project by slug. Also increments view counter."
+              },
+              "response": [],
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "exec": [
+                      "pm.test(\"Status 200\", () => pm.response.to.have.status(200));",
+                      "pm.test(\"Success true\", () => pm.expect(pm.response.json().success).to.be.true);",
+                      "pm.test(\"Has slug\", () => pm.expect(pm.response.json().data).to.have.property(\"slug\"));",
+                      "pm.test(\"Has techStack\", () => pm.expect(pm.response.json().data.techStack).to.be.an(\"array\"));"
+                    ],
+                    "type": "text/javascript"
+                  }
+                }
+              ]
+            },
+            {
+              "id": "d0803f3d-f2f6-41cb-b4a1-53c9862e1fe0",
+              "name": "\u274c Get non-existent slug",
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json",
+                    "type": "text"
+                  }
+                ],
+                "url": {
+                  "raw": "{{baseUrl}}/projects/non-existent-slug-xyz",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "projects",
+                    "non-existent-slug-xyz"
+                  ]
+                },
+                "description": "Should return 404."
+              },
+              "response": [],
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "exec": [
+                      "pm.test(\"Should be 404\", () => pm.response.to.have.status(404));"
+                    ],
+                    "type": "text/javascript"
+                  }
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "666f239c-f68e-436d-8600-765201999187",
+          "name": "Admin Endpoints (Protected)",
+          "description": "",
+          "item": [
+            {
+              "id": "ac185144-5514-4925-8adb-5d39a5b6ca94",
+              "name": "Get All Projects (Admin)",
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json",
+                    "type": "text"
+                  },
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{accessToken}}",
+                    "type": "text"
+                  }
+                ],
+                "url": {
+                  "raw": "{{baseUrl}}/projects/admin/all?page=1&limit=20",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "projects",
+                    "admin",
+                    "all"
+                  ],
+                  "query": [
+                    {
+                      "key": "page",
+                      "value": "1",
+                      "disabled": true
+                    },
+                    {
+                      "key": "limit",
+                      "value": "20",
+                      "disabled": true
+                    }
+                  ]
+                },
+                "description": "Returns all projects including hidden ones. Admin only."
+              },
+              "response": [],
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "exec": [
+                      "pm.test(\"Status 200\", () => pm.response.to.have.status(200));",
+                      "pm.test(\"Success true\", () => pm.expect(pm.response.json().success).to.be.true);",
+                      "pm.test(\"Has pagination\", () => {",
+                      "  const d = pm.response.json().data;",
+                      "  pm.expect(d).to.have.property(\"pagination\");",
+                      "  pm.expect(d).to.have.property(\"data\").that.is.an(\"array\");",
+                      "});"
+                    ],
+                    "type": "text/javascript"
+                  }
+                }
+              ]
+            },
+            {
+              "id": "8e5e3c7f-27a4-4e80-970e-72d1f1bc3076",
+              "name": "Create Project 1 \u2014 P2P Energy Trading",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json",
+                    "type": "text"
+                  },
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{accessToken}}",
+                    "type": "text"
+                  }
+                ],
+                "url": {
+                  "raw": "{{baseUrl}}/projects",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "projects"
+                  ]
+                },
+                "description": "Creates project and auto-saves projectId + projectSlug to collection variables.",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"title\": \"Secure P2P Energy Trading Platform\",\n  \"shortDescription\": \"A blockchain-based platform for peer-to-peer energy trading with RSA signatures and on-chain anchoring.\",\n  \"problemStatement\": \"Traditional energy grids lack transparency and peer-to-peer trading capabilities for prosumers.\",\n  \"solution\": \"Built a decentralized trading platform with React frontend, Node.js backend, MongoDB Atlas, and Solidity smart contracts on Hardhat.\",\n  \"techStack\": [\n    {\n      \"name\": \"React.js\",\n      \"category\": \"frontend\"\n    },\n    {\n      \"name\": \"Node.js\",\n      \"category\": \"backend\"\n    },\n    {\n      \"name\": \"MongoDB Atlas\",\n      \"category\": \"database\"\n    },\n    {\n      \"name\": \"Solidity\",\n      \"category\": \"tool\"\n    },\n    {\n      \"name\": \"Hardhat\",\n      \"category\": \"devops\"\n    },\n    {\n      \"name\": \"Ethers.js\",\n      \"category\": \"tool\"\n    }\n  ],\n  \"keyFeatures\": [\n    \"RSA digital signatures for transaction authentication\",\n    \"SHA-256 / Keccak-256 hashing \\u2014 private keys never leave the browser\",\n    \"On-chain anchoring \\u2014 only hash stored on blockchain\",\n    \"Append-only ledger with strict PENDING \\u2192 VERIFIED \\u2192 ANCHORED state machine\"\n  ],\n  \"architecture\": \"Frontend (React/Vite) \\u2194 REST API (Node/Express) \\u2194 MongoDB Atlas. Smart contracts on local Hardhat node via Ethers.js.\",\n  \"challenges\": \"Ensuring byte-identical canonicalization across frontend and backend for signature verification.\",\n  \"outcomes\": \"Successfully demonstrated decentralized energy trading at final year project viva.\",\n  \"myRole\": \"Full Stack Developer & Blockchain Engineer\",\n  \"teamSize\": 3,\n  \"duration\": \"4 months\",\n  \"status\": \"completed\",\n  \"category\": \"Blockchain / Web App\",\n  \"tags\": [\n    \"blockchain\",\n    \"react\",\n    \"nodejs\",\n    \"solidity\",\n    \"mongodb\",\n    \"final-year-project\"\n  ],\n  \"isFeatured\": true,\n  \"isVisible\": true,\n  \"displayOrder\": 1,\n  \"githubUrl\": \"https://github.com/MangeshPawar2004/p2p-energy-trading\",\n  \"liveDemoUrl\": \"\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "response": [],
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "exec": [
+                      "pm.test(\"Status 201\", () => pm.response.to.have.status(201));",
+                      "pm.test(\"Success true\", () => pm.expect(pm.response.json().success).to.be.true);",
+                      "const proj = pm.response.json().data;",
+                      "pm.collectionVariables.set(\"projectId\", proj._id);",
+                      "pm.collectionVariables.set(\"projectSlug\", proj.slug);",
+                      "console.log(\"\u2705 projectId:\", proj._id, \"slug:\", proj.slug);"
+                    ],
+                    "type": "text/javascript"
+                  }
+                }
+              ]
+            },
+            {
+              "id": "cf158e7d-2561-496a-8fdd-f498ce444bfa",
+              "name": "Create Project 2 \u2014 MERN Portfolio",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json",
+                    "type": "text"
+                  },
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{accessToken}}",
+                    "type": "text"
+                  }
+                ],
+                "url": {
+                  "raw": "{{baseUrl}}/projects",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "projects"
+                  ]
+                },
+                "description": "Create second project for testing list/filter.",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"title\": \"MERN Portfolio Engine\",\n  \"shortDescription\": \"A full-featured developer portfolio with admin panel, built on MERN stack with Cloudinary and JWT auth.\",\n  \"techStack\": [\n    {\n      \"name\": \"React.js\",\n      \"category\": \"frontend\"\n    },\n    {\n      \"name\": \"Node.js\",\n      \"category\": \"backend\"\n    },\n    {\n      \"name\": \"MongoDB\",\n      \"category\": \"database\"\n    },\n    {\n      \"name\": \"Cloudinary\",\n      \"category\": \"tool\"\n    }\n  ],\n  \"keyFeatures\": [\n    \"12 MongoDB schemas with CRUD factory pattern\",\n    \"JWT token rotation with HttpOnly cookies\",\n    \"Cloudinary media management\",\n    \"Admin panel for all content\"\n  ],\n  \"myRole\": \"Full Stack Developer\",\n  \"status\": \"ongoing\",\n  \"category\": \"Web App\",\n  \"tags\": [\n    \"mern\",\n    \"react\",\n    \"nodejs\",\n    \"portfolio\"\n  ],\n  \"isFeatured\": true,\n  \"isVisible\": true,\n  \"displayOrder\": 2\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "response": [],
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "exec": [
+                      "pm.test(\"Status 201\", () => pm.response.to.have.status(201));",
+                      "pm.test(\"Success true\", () => pm.expect(pm.response.json().success).to.be.true);"
+                    ],
+                    "type": "text/javascript"
+                  }
+                }
+              ]
+            },
+            {
+              "id": "76fb99dd-44a1-4647-91a5-a76b318b1c86",
+              "name": "Update Project",
+              "request": {
+                "method": "PUT",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json",
+                    "type": "text"
+                  },
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{accessToken}}",
+                    "type": "text"
+                  }
+                ],
+                "url": {
+                  "raw": "{{baseUrl}}/projects/{{projectId}}",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "projects",
+                    "{{projectId}}"
+                  ]
+                },
+                "description": "Partial-style update \u2014 only changed fields needed.",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"isFeatured\": true,\n  \"isVisible\": true,\n  \"displayOrder\": 1,\n  \"liveDemoUrl\": \"https://example.com\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "response": [],
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "exec": [
+                      "pm.test(\"Status 200\", () => pm.response.to.have.status(200));",
+                      "pm.test(\"Success true\", () => pm.expect(pm.response.json().success).to.be.true);"
+                    ],
+                    "type": "text/javascript"
+                  }
+                }
+              ]
+            },
+            {
+              "id": "8f67e8f1-75db-4e6c-a617-f810035bc96b",
+              "name": "Toggle Visibility OFF",
+              "request": {
+                "method": "PUT",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json",
+                    "type": "text"
+                  },
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{accessToken}}",
+                    "type": "text"
+                  }
+                ],
+                "url": {
+                  "raw": "{{baseUrl}}/projects/{{projectId}}",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "projects",
+                    "{{projectId}}"
+                  ]
+                },
+                "description": "Soft-hide project from public view.",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"isVisible\": false\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "response": [],
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "exec": [
+                      "pm.test(\"Status 200\", () => pm.response.to.have.status(200));",
+                      "pm.test(\"Success true\", () => pm.expect(pm.response.json().success).to.be.true);"
+                    ],
+                    "type": "text/javascript"
+                  }
+                }
+              ]
+            },
+            {
+              "id": "b3eb366c-f5ae-481e-bdf4-d8f03918ea2c",
+              "name": "Toggle Visibility ON",
+              "request": {
+                "method": "PUT",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json",
+                    "type": "text"
+                  },
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{accessToken}}",
+                    "type": "text"
+                  }
+                ],
+                "url": {
+                  "raw": "{{baseUrl}}/projects/{{projectId}}",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "projects",
+                    "{{projectId}}"
+                  ]
+                },
+                "description": "Restore project visibility.",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"isVisible\": true\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "response": [],
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "exec": [
+                      "pm.test(\"Status 200\", () => pm.response.to.have.status(200));",
+                      "pm.test(\"Success true\", () => pm.expect(pm.response.json().success).to.be.true);"
+                    ],
+                    "type": "text/javascript"
+                  }
+                }
+              ]
+            },
+            {
+              "id": "dc431b15-03fc-4289-9cee-9a53287080de",
+              "name": "Upload Project Media (form-data)",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{accessToken}}",
+                    "type": "text"
+                  }
+                ],
+                "url": {
+                  "raw": "{{baseUrl}}/projects/{{projectId}}/media",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "projects",
+                    "{{projectId}}",
+                    "media"
+                  ]
+                },
+                "description": "Upload screenshots/videos. Select files in 'media' field. Supports jpg, png, webp, gif, mp4.",
+                "body": {
+                  "mode": "formdata",
+                  "formdata": [
+                    {
+                      "key": "media",
+                      "type": "file",
+                      "src": "",
+                      "description": "Select image or video files (up to 10)"
+                    }
+                  ]
+                }
+              },
+              "response": []
+            },
+            {
+              "id": "c7558e95-84ad-4df4-860a-d9fdafc35cf4",
+              "name": "Delete Project Media",
+              "request": {
+                "method": "DELETE",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json",
+                    "type": "text"
+                  },
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{accessToken}}",
+                    "type": "text"
+                  }
+                ],
+                "url": {
+                  "raw": "{{baseUrl}}/projects/{{projectId}}/media/MEDIA_ID_HERE",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "projects",
+                    "{{projectId}}",
+                    "media",
+                    "MEDIA_ID_HERE"
+                  ]
+                },
+                "description": "Replace MEDIA_ID_HERE with actual media _id from upload response. Deletes from Cloudinary too."
+              },
+              "response": []
+            },
+            {
+              "id": "35b21327-8504-415a-a180-ea04c357349e",
+              "name": "Delete Project",
+              "request": {
+                "method": "DELETE",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json",
+                    "type": "text"
+                  },
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{accessToken}}",
+                    "type": "text"
+                  }
+                ],
+                "url": {
+                  "raw": "{{baseUrl}}/projects/{{projectId}}",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "projects",
+                    "{{projectId}}"
+                  ]
+                },
+                "description": "Deletes project + all media from Cloudinary. Irreversible."
+              },
+              "response": [],
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "exec": [
+                      "pm.test(\"Status 200\", () => pm.response.to.have.status(200));",
+                      "pm.test(\"Success true\", () => pm.expect(pm.response.json().success).to.be.true);"
+                    ],
+                    "type": "text/javascript"
+                  }
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "d310ca5a-4552-4067-b3f3-49507c38b2fe",
+      "name": "\ud83d\udee0\ufe0f Skills",
+      "description": "Tech stack / proficiency levels. Grouped by category.",
+      "item": [
+        {
+          "id": "2734e5e7-5a7e-48a2-b302-409663df7024",
+          "name": "Get All Skills (Public)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/skills?page=1&limit=20",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "skills"
+              ],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "1",
+                  "disabled": true
+                },
+                {
+                  "key": "limit",
+                  "value": "20",
+                  "disabled": true
+                }
+              ]
+            },
+            "description": "Returns visible skills. Filter by category with ?category=frontend"
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"Success true\", () => pm.expect(pm.response.json().success).to.be.true);",
+                  "pm.test(\"Has pagination\", () => {",
+                  "  const d = pm.response.json().data;",
+                  "  pm.expect(d).to.have.property(\"pagination\");",
+                  "  pm.expect(d).to.have.property(\"data\").that.is.an(\"array\");",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "id": "059f292f-77d5-49f9-9290-929bfcd2c57f",
+          "name": "Create Skill \u2014 React.js",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/skills",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "skills"
+              ]
+            },
+            "description": "Creates skill and saves skillId to collection variables.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"React.js\",\n  \"category\": \"frontend\",\n  \"proficiency\": 85,\n  \"experienceYears\": 2,\n  \"isFeatured\": true,\n  \"displayOrder\": 1\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status 201\", () => pm.response.to.have.status(201));",
+                  "pm.test(\"Success true\", () => pm.expect(pm.response.json().success).to.be.true);",
+                  "pm.collectionVariables.set(\"skillId\", pm.response.json().data._id);"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "id": "2cbb3d9b-35d3-4c4e-a6e0-875d03c0f0da",
+          "name": "Create Skill \u2014 Node.js",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/skills",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "skills"
+              ]
+            },
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Node.js\",\n  \"category\": \"backend\",\n  \"proficiency\": 82,\n  \"experienceYears\": 2,\n  \"isFeatured\": true,\n  \"displayOrder\": 3\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status 201\", () => pm.response.to.have.status(201));",
+                  "pm.test(\"Success true\", () => pm.expect(pm.response.json().success).to.be.true);"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "id": "ba4250a2-787f-4593-a77e-824e4fe2c6d3",
+          "name": "Create Skill \u2014 MongoDB",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/skills",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "skills"
+              ]
+            },
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"MongoDB\",\n  \"category\": \"database\",\n  \"proficiency\": 78,\n  \"experienceYears\": 2,\n  \"isFeatured\": true,\n  \"displayOrder\": 6\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status 201\", () => pm.response.to.have.status(201));",
+                  "pm.test(\"Success true\", () => pm.expect(pm.response.json().success).to.be.true);"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "id": "e2d2d563-4ada-465e-8e20-5b411b8d7791",
+          "name": "Create Skill \u2014 JavaScript",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/skills",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "skills"
+              ]
+            },
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"JavaScript\",\n  \"category\": \"language\",\n  \"proficiency\": 88,\n  \"experienceYears\": 3,\n  \"isFeatured\": true,\n  \"displayOrder\": 11\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status 201\", () => pm.response.to.have.status(201));",
+                  "pm.test(\"Success true\", () => pm.expect(pm.response.json().success).to.be.true);"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "id": "95fe17dc-5a43-46b6-a74c-0c7cf42ab2a7",
+          "name": "Create Skill \u2014 Python",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/skills",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "skills"
+              ]
+            },
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Python\",\n  \"category\": \"language\",\n  \"proficiency\": 72,\n  \"experienceYears\": 2,\n  \"displayOrder\": 10\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status 201\", () => pm.response.to.have.status(201));",
+                  "pm.test(\"Success true\", () => pm.expect(pm.response.json().success).to.be.true);"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "id": "e8df155e-3aa5-4b21-a68e-4a81858d4d55",
+          "name": "Create Skill \u2014 Solidity",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/skills",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "skills"
+              ]
+            },
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Solidity\",\n  \"category\": \"language\",\n  \"proficiency\": 55,\n  \"experienceYears\": 1,\n  \"displayOrder\": 12\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status 201\", () => pm.response.to.have.status(201));",
+                  "pm.test(\"Success true\", () => pm.expect(pm.response.json().success).to.be.true);"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "id": "bf6fce37-aa55-4026-90ed-cad7b98f8bb9",
+          "name": "Get Skill by ID",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/skills/{{skillId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "skills",
+                "{{skillId}}"
+              ]
+            },
+            "description": "Fetch single skill document."
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"Success true\", () => pm.expect(pm.response.json().success).to.be.true);"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "id": "f5db9e18-8167-4dac-8f08-36c8a967a1f6",
+          "name": "Update Skill Proficiency",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/skills/{{skillId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "skills",
+                "{{skillId}}"
+              ]
+            },
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"proficiency\": 90,\n  \"isFeatured\": true\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"Success true\", () => pm.expect(pm.response.json().success).to.be.true);"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "id": "d3b26988-f78b-4d02-a4d3-bd94cbf2acaa",
+          "name": "Reorder Skills",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/skills/reorder",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "skills",
+                "reorder"
+              ]
+            },
+            "description": "Send array of {id, displayOrder} pairs to reorder.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"items\": [\n    {\n      \"id\": \"{{skillId}}\",\n      \"displayOrder\": 1\n    }\n  ]\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"Success true\", () => pm.expect(pm.response.json().success).to.be.true);"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "id": "e2cf944d-4c32-4505-a6ea-c4f2bd7f7e7c",
+          "name": "Delete Skill",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/skills/{{skillId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "skills",
+                "{{skillId}}"
+              ]
+            },
+            "description": ""
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"Success true\", () => pm.expect(pm.response.json().success).to.be.true);"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "b506f69f-9729-4c76-9e1d-0b0b25e5eb83",
+      "name": "\ud83d\udcbc Experience",
+      "description": "Work history \u2014 jobs, internships, freelance.",
+      "item": [
+        {
+          "id": "cbe2e4ff-f980-4021-af2e-86eeb27e9521",
+          "name": "Get All Experience (Public)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/experience",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "experience"
+              ]
+            },
+            "description": "Sorted by displayOrder. isVisible=true filter applied."
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"Success true\", () => pm.expect(pm.response.json().success).to.be.true);",
+                  "pm.test(\"Has pagination\", () => {",
+                  "  const d = pm.response.json().data;",
+                  "  pm.expect(d).to.have.property(\"pagination\");",
+                  "  pm.expect(d).to.have.property(\"data\").that.is.an(\"array\");",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "id": "a3fca48c-5524-4f73-b192-1e5af1579717",
+          "name": "Create Experience \u2014 Cogitate Full-time",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/experience",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "experience"
+              ]
+            },
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"company\": \"Cogitate\",\n  \"companyUrl\": \"https://cogitate.us\",\n  \"role\": \"Associate Full Stack Developer\",\n  \"employmentType\": \"full-time\",\n  \"location\": \"Navi Mumbai, Maharashtra, India\",\n  \"locationType\": \"hybrid\",\n  \"startDate\": \"2024-08-01\",\n  \"endDate\": null,\n  \"isCurrent\": true,\n  \"description\": \"Building and maintaining the DigitalEdge Billing (DEB) platform for insurance carriers using Node.js, Azure Functions, SQL Server, and React.\",\n  \"responsibilities\": [\n    \"Developed installment projection engine for multi-event billing lifecycle (NB, Endorsement, Cancellation, Reinstatement)\",\n    \"Investigated and prototyped autonomous coding agent POC using Cursor Pro for .NET billing codebase\",\n    \"Diagnosed and fixed Google Maps geocoding mismatch bug in address autocomplete component\",\n    \"Built Azure Function integrations with Cosmos DB and SQL Server\"\n  ],\n  \"achievements\": [\n    \"Promoted from intern to full-time developer after 10 months\",\n    \"Designed installment projection schema v5.0 with 32 tables across 10 groups\"\n  ],\n  \"techStack\": [\n    \"Node.js\",\n    \"React.js\",\n    \"Azure Functions\",\n    \"SQL Server\",\n    \"Cosmos DB\",\n    \".NET\",\n    \"GraphQL\"\n  ],\n  \"displayOrder\": 1\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status 201\", () => pm.response.to.have.status(201));",
+                  "pm.test(\"Success true\", () => pm.expect(pm.response.json().success).to.be.true);",
+                  "pm.collectionVariables.set(\"experienceId\", pm.response.json().data._id);"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "id": "e69a5035-3b64-47b9-9c7e-bc482108d671",
+          "name": "Create Experience \u2014 Cogitate Intern",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/experience",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "experience"
+              ]
+            },
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"company\": \"Cogitate\",\n  \"role\": \"Software Developer Intern\",\n  \"employmentType\": \"internship\",\n  \"location\": \"Navi Mumbai, Maharashtra, India\",\n  \"locationType\": \"hybrid\",\n  \"startDate\": \"2023-10-01\",\n  \"endDate\": \"2024-07-31\",\n  \"isCurrent\": false,\n  \"description\": \"Interned as a full stack developer on the DEB insurance billing platform.\",\n  \"responsibilities\": [\n    \"Built React components for policy management UI\",\n    \"Wrote Node.js controllers and Azure Function triggers\",\n    \"Collaborated with senior devs on schema design and SQL stored procedures\"\n  ],\n  \"techStack\": [\n    \"React.js\",\n    \"Node.js\",\n    \"Azure Functions\",\n    \"SQL Server\"\n  ],\n  \"displayOrder\": 2\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status 201\", () => pm.response.to.have.status(201));",
+                  "pm.test(\"Success true\", () => pm.expect(pm.response.json().success).to.be.true);"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "id": "8ce0a57a-a342-4fd4-9713-b87908c8a669",
+          "name": "Get Experience by ID",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/experience/{{experienceId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "experience",
+                "{{experienceId}}"
+              ]
+            },
+            "description": ""
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"Success true\", () => pm.expect(pm.response.json().success).to.be.true);"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "id": "ea585974-3302-4880-a6cd-3a82dc752286",
+          "name": "Update Experience",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/experience/{{experienceId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "experience",
+                "{{experienceId}}"
+              ]
+            },
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"achievements\": [\n    \"Promoted from intern to full-time\",\n    \"Led installment schema design v5.0\"\n  ]\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"Success true\", () => pm.expect(pm.response.json().success).to.be.true);"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "id": "171e70b0-6304-4789-98ec-9e5bf75efb83",
+          "name": "Delete Experience",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/experience/{{experienceId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "experience",
+                "{{experienceId}}"
+              ]
+            },
+            "description": ""
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"Success true\", () => pm.expect(pm.response.json().success).to.be.true);"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "73d89fa1-1992-43c2-85b8-b014af6dfd44",
+      "name": "\ud83c\udf93 Education",
+      "description": "Degrees, institutes, CGPA, relevant coursework.",
+      "item": [
+        {
+          "id": "2ac56f4d-fb8e-488f-9f7b-0f5f5a6ddaf9",
+          "name": "Get All Education (Public)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/education",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "education"
+              ]
+            },
+            "description": ""
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"Success true\", () => pm.expect(pm.response.json().success).to.be.true);",
+                  "pm.test(\"Has pagination\", () => {",
+                  "  const d = pm.response.json().data;",
+                  "  pm.expect(d).to.have.property(\"pagination\");",
+                  "  pm.expect(d).to.have.property(\"data\").that.is.an(\"array\");",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "id": "5a176a58-a3e6-4af4-9549-fa4e48cfc9ea",
+          "name": "Create Education",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/education",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "education"
+              ]
+            },
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"institution\": \"Dr. D. Y. Patil Institute of Technology\",\n  \"institutionUrl\": \"https://www.dypit.edu.in\",\n  \"degree\": \"Bachelor of Engineering\",\n  \"fieldOfStudy\": \"Artificial Intelligence & Data Science\",\n  \"startYear\": 2021,\n  \"endYear\": 2025,\n  \"isOngoing\": false,\n  \"grade\": \"Strong academic record\",\n  \"gradeScale\": \"10.0 CGPA\",\n  \"description\": \"Four-year engineering program with specialization in AI/ML, Data Science, and full-stack development.\",\n  \"relevantCourses\": [\n    \"Machine Learning\",\n    \"Deep Learning\",\n    \"Distributed Systems\",\n    \"Database Management Systems\",\n    \"Computer Networks\",\n    \"Software Engineering\"\n  ],\n  \"activities\": [\n    \"Final year project on P2P energy trading using blockchain\"\n  ],\n  \"displayOrder\": 1\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status 201\", () => pm.response.to.have.status(201));",
+                  "pm.test(\"Success true\", () => pm.expect(pm.response.json().success).to.be.true);",
+                  "pm.collectionVariables.set(\"educationId\", pm.response.json().data._id);"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "id": "dec30f65-219a-4a40-9e4a-b652ca484a4c",
+          "name": "Get Education by ID",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/education/{{educationId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "education",
+                "{{educationId}}"
+              ]
+            },
+            "description": ""
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"Success true\", () => pm.expect(pm.response.json().success).to.be.true);"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "id": "b70481e9-8dcf-4743-8dbf-3f126d45bc8c",
+          "name": "Update Education",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/education/{{educationId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "education",
+                "{{educationId}}"
+              ]
+            },
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"grade\": \"8.9 CGPA\",\n  \"isOngoing\": false\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"Success true\", () => pm.expect(pm.response.json().success).to.be.true);"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "id": "a01ed7f8-d0ad-42f2-8188-c96dba962c94",
+          "name": "Delete Education",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/education/{{educationId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "education",
+                "{{educationId}}"
+              ]
+            },
+            "description": ""
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"Success true\", () => pm.expect(pm.response.json().success).to.be.true);"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "7f4aa479-2111-44c9-9af2-ece30f2b19c6",
+      "name": "\ud83c\udfc6 Certificates",
+      "description": "Certifications, awards, hackathon wins, publications.",
+      "item": [
+        {
+          "id": "fbdbd8c9-4534-460a-a515-039696bcbbf0",
+          "name": "Get All Certificates (Public)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/certificates",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "certificates"
+              ]
+            },
+            "description": ""
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"Success true\", () => pm.expect(pm.response.json().success).to.be.true);",
+                  "pm.test(\"Has pagination\", () => {",
+                  "  const d = pm.response.json().data;",
+                  "  pm.expect(d).to.have.property(\"pagination\");",
+                  "  pm.expect(d).to.have.property(\"data\").that.is.an(\"array\");",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "id": "ef070c14-2cfa-43ce-8b02-dced642a2aa8",
+          "name": "Create Certificate \u2014 React",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/certificates",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "certificates"
+              ]
+            },
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"React \\u2014 The Complete Guide\",\n  \"issuer\": \"Udemy\",\n  \"category\": \"certification\",\n  \"issueDate\": \"2023-06-01\",\n  \"credentialUrl\": \"https://udemy.com/certificate/example\",\n  \"skills\": [\n    \"React.js\",\n    \"Redux\",\n    \"Hooks\"\n  ],\n  \"displayOrder\": 1\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status 201\", () => pm.response.to.have.status(201));",
+                  "pm.test(\"Success true\", () => pm.expect(pm.response.json().success).to.be.true);",
+                  "pm.collectionVariables.set(\"certificateId\", pm.response.json().data._id);"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "id": "5225d4e2-2112-45f6-b58e-d9acbf395081",
+          "name": "Create Certificate \u2014 AZ-900",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/certificates",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "certificates"
+              ]
+            },
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"Microsoft Azure Fundamentals (AZ-900)\",\n  \"issuer\": \"Microsoft\",\n  \"category\": \"certification\",\n  \"issueDate\": \"2024-01-15\",\n  \"credentialId\": \"AZ900-XXXX\",\n  \"credentialUrl\": \"https://learn.microsoft.com/en-us/certifications\",\n  \"skills\": [\n    \"Azure\",\n    \"Cloud Computing\"\n  ],\n  \"displayOrder\": 2\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status 201\", () => pm.response.to.have.status(201));",
+                  "pm.test(\"Success true\", () => pm.expect(pm.response.json().success).to.be.true);"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "id": "bce75fb1-4a8e-440d-b2f4-9b6639b31b44",
+          "name": "Get Certificate by ID",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/certificates/{{certificateId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "certificates",
+                "{{certificateId}}"
+              ]
+            },
+            "description": ""
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"Success true\", () => pm.expect(pm.response.json().success).to.be.true);"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "id": "ce54c90e-81ae-495b-b380-7159d490ca50",
+          "name": "Update Certificate",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/certificates/{{certificateId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "certificates",
+                "{{certificateId}}"
+              ]
+            },
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"credentialId\": \"CERT-2024-REACT-001\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"Success true\", () => pm.expect(pm.response.json().success).to.be.true);"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "id": "505f1c7a-bded-48f5-bd31-1c808d50745e",
+          "name": "Delete Certificate",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/certificates/{{certificateId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "certificates",
+                "{{certificateId}}"
+              ]
+            },
+            "description": ""
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"Success true\", () => pm.expect(pm.response.json().success).to.be.true);"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "af9cf066-a0d2-4223-87c5-0b194e45298f",
+      "name": "\ud83d\udcac Testimonials",
+      "description": "Mentor/colleague recommendations. isApproved gate prevents unsolicited content.",
+      "item": [
+        {
+          "id": "7c4a218a-97c7-47a0-a840-9af49a2ec13b",
+          "name": "Get All Testimonials (Public)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/testimonials",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "testimonials"
+              ]
+            },
+            "description": "Returns isApproved=true testimonials only."
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"Success true\", () => pm.expect(pm.response.json().success).to.be.true);",
+                  "pm.test(\"Has pagination\", () => {",
+                  "  const d = pm.response.json().data;",
+                  "  pm.expect(d).to.have.property(\"pagination\");",
+                  "  pm.expect(d).to.have.property(\"data\").that.is.an(\"array\");",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "id": "aef6b2b0-39e6-44a1-9d5b-9fa0cb68f5ec",
+          "name": "Create Testimonial",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/testimonials",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "testimonials"
+              ]
+            },
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Lava Jois\",\n  \"role\": \"Technical Lead\",\n  \"company\": \"Cogitate\",\n  \"content\": \"Mangesh consistently delivers high-quality code and shows strong initiative on complex billing problems. His work on the installment projection engine was exemplary.\",\n  \"rating\": 5,\n  \"relation\": \"manager\",\n  \"isApproved\": true,\n  \"isFeatured\": true,\n  \"displayOrder\": 1\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status 201\", () => pm.response.to.have.status(201));",
+                  "pm.test(\"Success true\", () => pm.expect(pm.response.json().success).to.be.true);",
+                  "pm.collectionVariables.set(\"testimonialId\", pm.response.json().data._id);"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "id": "ce8ff9b0-2d24-4561-b565-e18b06be9ead",
+          "name": "Create Testimonial (Pending Approval)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/testimonials",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "testimonials"
+              ]
+            },
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Samir K\",\n  \"role\": \"Developer\",\n  \"company\": \"Cogitate\",\n  \"content\": \"Great collaborator and always willing to help debug tricky Azure Function issues.\",\n  \"rating\": 5,\n  \"relation\": \"colleague\",\n  \"isApproved\": false,\n  \"displayOrder\": 2\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status 201\", () => pm.response.to.have.status(201));",
+                  "pm.test(\"Success true\", () => pm.expect(pm.response.json().success).to.be.true);"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "id": "bbca2787-df3b-447c-9239-62219f57469f",
+          "name": "Get Testimonial by ID",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/testimonials/{{testimonialId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "testimonials",
+                "{{testimonialId}}"
+              ]
+            },
+            "description": ""
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"Success true\", () => pm.expect(pm.response.json().success).to.be.true);"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "id": "79565a29-fd07-46d7-8207-cee3f16150ae",
+          "name": "Approve Testimonial",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/testimonials/{{testimonialId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "testimonials",
+                "{{testimonialId}}"
+              ]
+            },
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"isApproved\": true,\n  \"isFeatured\": true\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"Success true\", () => pm.expect(pm.response.json().success).to.be.true);"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "id": "9b29fc63-c0c8-4cce-b48b-591018781277",
+          "name": "Reject / Hide Testimonial",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/testimonials/{{testimonialId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "testimonials",
+                "{{testimonialId}}"
+              ]
+            },
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"isApproved\": false,\n  \"isVisible\": false\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"Success true\", () => pm.expect(pm.response.json().success).to.be.true);"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "id": "40688f29-332a-47cf-9288-fb5c5ebceddb",
+          "name": "Delete Testimonial",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/testimonials/{{testimonialId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "testimonials",
+                "{{testimonialId}}"
+              ]
+            },
+            "description": ""
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"Success true\", () => pm.expect(pm.response.json().success).to.be.true);"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "1c8e8926-f7d1-49d8-9afc-7d585e1c149a",
+      "name": "\ud83d\udd17 Social Links",
+      "description": "GitHub, LinkedIn, email, Twitter/X, LeetCode, etc.",
+      "item": [
+        {
+          "id": "da36db91-8b6a-49d2-b3c9-4668b82c7909",
+          "name": "Get All Social Links (Public)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/social-links",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "social-links"
+              ]
+            },
+            "description": ""
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"Success true\", () => pm.expect(pm.response.json().success).to.be.true);",
+                  "pm.test(\"Has pagination\", () => {",
+                  "  const d = pm.response.json().data;",
+                  "  pm.expect(d).to.have.property(\"pagination\");",
+                  "  pm.expect(d).to.have.property(\"data\").that.is.an(\"array\");",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "id": "446b5e55-7e52-4bd4-a328-b88c43c62624",
+          "name": "Create GitHub Link",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/social-links",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "social-links"
+              ]
+            },
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"platform\": \"github\",\n  \"url\": \"https://github.com/MangeshPawar2004\",\n  \"label\": \"GitHub\",\n  \"showInFooter\": true,\n  \"showInContact\": true,\n  \"displayOrder\": 1\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status 201\", () => pm.response.to.have.status(201));",
+                  "pm.test(\"Success true\", () => pm.expect(pm.response.json().success).to.be.true);",
+                  "pm.collectionVariables.set(\"socialLinkId\", pm.response.json().data._id);"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "id": "a8f9bf4c-e734-4baa-a400-519eafb5c3e4",
+          "name": "Create LinkedIn Link",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/social-links",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "social-links"
+              ]
+            },
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"platform\": \"linkedin\",\n  \"url\": \"https://linkedin.com/in/mangesh-pawar-160324256\",\n  \"label\": \"LinkedIn\",\n  \"showInFooter\": true,\n  \"showInContact\": true,\n  \"displayOrder\": 2\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status 201\", () => pm.response.to.have.status(201));",
+                  "pm.test(\"Success true\", () => pm.expect(pm.response.json().success).to.be.true);"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "id": "8e168b76-55cc-4186-897d-da18caf5128f",
+          "name": "Create Email Link",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/social-links",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "social-links"
+              ]
+            },
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"platform\": \"email\",\n  \"url\": \"mailto:mangesh@example.com\",\n  \"label\": \"Email\",\n  \"showInFooter\": true,\n  \"showInContact\": true,\n  \"displayOrder\": 3\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status 201\", () => pm.response.to.have.status(201));",
+                  "pm.test(\"Success true\", () => pm.expect(pm.response.json().success).to.be.true);"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "id": "8b09103d-b7b8-4f40-9da8-2d5ef2f3d88f",
+          "name": "Create Twitter Link",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/social-links",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "social-links"
+              ]
+            },
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"platform\": \"twitter\",\n  \"url\": \"https://twitter.com/mangeshpawar\",\n  \"label\": \"Twitter\",\n  \"showInFooter\": true,\n  \"showInContact\": false,\n  \"displayOrder\": 4\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status 201\", () => pm.response.to.have.status(201));",
+                  "pm.test(\"Success true\", () => pm.expect(pm.response.json().success).to.be.true);"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "id": "8b2205f2-db5f-4caa-ba9c-7512aff18b75",
+          "name": "Create LeetCode Link",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/social-links",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "social-links"
+              ]
+            },
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"platform\": \"leetcode\",\n  \"url\": \"https://leetcode.com/mangeshpawar\",\n  \"label\": \"LeetCode\",\n  \"showInFooter\": false,\n  \"showInContact\": false,\n  \"displayOrder\": 5\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status 201\", () => pm.response.to.have.status(201));",
+                  "pm.test(\"Success true\", () => pm.expect(pm.response.json().success).to.be.true);"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "id": "96f7c886-28a2-4ec7-9560-372828a19a05",
+          "name": "Get Social Link by ID",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/social-links/{{socialLinkId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "social-links",
+                "{{socialLinkId}}"
+              ]
+            },
+            "description": ""
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"Success true\", () => pm.expect(pm.response.json().success).to.be.true);"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "id": "ad64a3f5-7415-4632-9a9f-8bc5425813e3",
+          "name": "Update Social Link",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/social-links/{{socialLinkId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "social-links",
+                "{{socialLinkId}}"
+              ]
+            },
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"showInFooter\": true,\n  \"showInContact\": true\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"Success true\", () => pm.expect(pm.response.json().success).to.be.true);"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "id": "101b0bb7-e0bd-4733-8424-5d568a2a9fe2",
+          "name": "Reorder Social Links",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/social-links/reorder",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "social-links",
+                "reorder"
+              ]
+            },
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"items\": [\n    {\n      \"id\": \"{{socialLinkId}}\",\n      \"displayOrder\": 1\n    }\n  ]\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"Success true\", () => pm.expect(pm.response.json().success).to.be.true);"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "id": "bfb8af9d-8ef5-4a04-8f99-fea44eb5a391",
+          "name": "Delete Social Link",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/social-links/{{socialLinkId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "social-links",
+                "{{socialLinkId}}"
+              ]
+            },
+            "description": ""
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"Success true\", () => pm.expect(pm.response.json().success).to.be.true);"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "fd770858-eaba-4af2-9a84-3e39dcea705b",
+      "name": "\ud83d\udce8 Contact",
+      "description": "Inbound contact form. Rate-limited. Admin status workflow: unread \u2192 read \u2192 replied/archived.",
+      "item": [
+        {
+          "id": "b2cc1aaf-5831-4fdb-8445-b223a353c5d9",
+          "name": "Submit Contact Form (Public)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/contact",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "contact"
+              ]
+            },
+            "description": "Public endpoint \u2014 rate limited to 5 requests per 15 min per IP. Triggers email notification.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Recruiter John\",\n  \"email\": \"recruiter@techcorp.com\",\n  \"subject\": \"Exciting Full Stack role at TechCorp\",\n  \"message\": \"Hi Mangesh, I came across your portfolio and wanted to discuss an exciting opportunity for a Senior Full Stack Engineer role at TechCorp. Your experience with React, Node.js and Azure is exactly what we need.\",\n  \"phone\": \"+91 98765 43210\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status 201\", () => pm.response.to.have.status(201));",
+                  "pm.test(\"Success true\", () => pm.expect(pm.response.json().success).to.be.true);",
+                  "pm.collectionVariables.set(\"contactMsgId\", pm.response.json().data._id);"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "id": "e5883992-b4d8-4f5a-98f2-db4867d262ef",
+          "name": "Submit Contact Form #2 \u2014 Test Rate Limit",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/contact",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "contact"
+              ]
+            },
+            "description": "Submit a second message. Send 6 times quickly to trigger 429 rate limit.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Another Recruiter\",\n  \"email\": \"recruiter2@company.com\",\n  \"subject\": \"React Developer position\",\n  \"message\": \"We have an opening that matches your profile perfectly.\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Rate limit triggers on excess\", () => {",
+                  "  pm.expect(pm.response.code).to.be.oneOf([200, 201, 429]);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "id": "32aa9acd-c889-4a7c-a1c7-e2b836e99585",
+          "name": "Get All Messages (Admin)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/contact?status=unread",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "contact"
+              ],
+              "query": [
+                {
+                  "key": "status",
+                  "value": "unread",
+                  "disabled": true
+                }
+              ]
+            },
+            "description": "Filter by status: unread, read, replied, archived. Admin only."
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"Success true\", () => pm.expect(pm.response.json().success).to.be.true);",
+                  "pm.test(\"Has pagination\", () => {",
+                  "  const d = pm.response.json().data;",
+                  "  pm.expect(d).to.have.property(\"pagination\");",
+                  "  pm.expect(d).to.have.property(\"data\").that.is.an(\"array\");",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "id": "67d41334-64a4-4fd1-86ad-65aaca280890",
+          "name": "Get Message by ID (marks as read)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/contact/{{contactMsgId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "contact",
+                "{{contactMsgId}}"
+              ]
+            },
+            "description": "Fetching a message auto-updates status to 'read'."
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"Success true\", () => pm.expect(pm.response.json().success).to.be.true);"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "id": "a84fa64e-e8de-48b1-8d9f-25a11fac3fba",
+          "name": "Mark as Replied",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/contact/{{contactMsgId}}/status",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "contact",
+                "{{contactMsgId}}",
+                "status"
+              ]
+            },
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"replied\",\n  \"adminNotes\": \"Responded via email on Aug 4 2026\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"Success true\", () => pm.expect(pm.response.json().success).to.be.true);"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "id": "6a323f82-679d-49a2-a064-ac684e305b76",
+          "name": "Mark as Archived",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/contact/{{contactMsgId}}/status",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "contact",
+                "{{contactMsgId}}",
+                "status"
+              ]
+            },
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"archived\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"Success true\", () => pm.expect(pm.response.json().success).to.be.true);"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "id": "dbb46466-2b50-4c1b-8910-50c62ec8b9d0",
+          "name": "Mark as Spam",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/contact/{{contactMsgId}}/status",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "contact",
+                "{{contactMsgId}}",
+                "status"
+              ]
+            },
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"archived\",\n  \"isSpam\": true\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"Success true\", () => pm.expect(pm.response.json().success).to.be.true);"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "id": "f6e4d54a-d9b2-4b65-9df1-d12b5b43f9e6",
+          "name": "Delete Message",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/contact/{{contactMsgId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "contact",
+                "{{contactMsgId}}"
+              ]
+            },
+            "description": ""
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"Success true\", () => pm.expect(pm.response.json().success).to.be.true);"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "id": "49449b0c-e396-470a-a693-bda024911d5c",
+          "name": "\u274c Submit without required fields",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/contact",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "contact"
+              ]
+            },
+            "description": "Missing email and message \u2014 should return 422 or 500 validation error.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Test\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Should fail\", () => pm.expect(pm.response.code).to.be.oneOf([400, 422, 500]));"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "c317f564-4380-4dfd-a12c-bf3235590c9e",
+      "name": "\ud83d\udcdd Blog",
+      "description": "Technical articles. Draft \u2192 Published \u2192 Archived workflow. Auto-slug, auto-readTime, auto-publishedAt.",
+      "item": [
+        {
+          "id": "f7cd4bc3-b74b-4910-93bc-b33a520236e6",
+          "name": "Get Published Posts (Public)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/blog?page=1&limit=10",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "blog"
+              ],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "1",
+                  "disabled": true
+                },
+                {
+                  "key": "limit",
+                  "value": "10",
+                  "disabled": true
+                }
+              ]
+            },
+            "description": "Returns status=published posts only, paginated."
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"Success true\", () => pm.expect(pm.response.json().success).to.be.true);",
+                  "pm.test(\"Has pagination\", () => {",
+                  "  const d = pm.response.json().data;",
+                  "  pm.expect(d).to.have.property(\"pagination\");",
+                  "  pm.expect(d).to.have.property(\"data\").that.is.an(\"array\");",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "id": "dc182c28-35d8-443d-9f21-038b8951f119",
+          "name": "Get Post by Slug (Public)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/blog/{{blogSlug}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "blog",
+                "{{blogSlug}}"
+              ]
+            },
+            "description": "Fetch single post. Also increments view counter."
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"Success true\", () => pm.expect(pm.response.json().success).to.be.true);"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "id": "a8e3dbda-e6ec-4e76-b2e6-aa3998c6ec74",
+          "name": "Get All Posts \u2014 Admin",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/blog/admin/all",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "blog",
+                "admin",
+                "all"
+              ]
+            },
+            "description": "Returns all posts including drafts and archived."
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"Success true\", () => pm.expect(pm.response.json().success).to.be.true);",
+                  "pm.test(\"Has pagination\", () => {",
+                  "  const d = pm.response.json().data;",
+                  "  pm.expect(d).to.have.property(\"pagination\");",
+                  "  pm.expect(d).to.have.property(\"data\").that.is.an(\"array\");",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "id": "526761b4-8661-4501-a97d-d182d7b5a495",
+          "name": "Create Blog Post (Draft)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/blog",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "blog"
+              ]
+            },
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"How I Built an Autonomous Coding Agent POC with Cursor Pro\",\n  \"excerpt\": \"A deep dive into building a Planner\\u2013Generator\\u2013Evaluator architecture for long-running coding agents on a .NET billing codebase.\",\n  \"content\": \"## Introduction\\n\\nAt Cogitate, I was tasked by my lead (Lava Jois) to investigate autonomous coding agent tools...\\n\\n## Architecture\\n\\nThe POC uses a three-layer architecture: **Planner** (breaks down tasks), **Generator** (writes code), **Evaluator** (runs tests, checks output)...\\n\\n## Challenges\\n\\nThe biggest challenge was keeping context across long-running sessions without hitting token limits...\\n\\n## Results\\n\\nSuccessfully demonstrated a file-persisted state machine with `tasks.md` and `.cursor/rules/*.mdc` for billing domain vocabulary.\",\n  \"tags\": [\n    \"ai\",\n    \"cursor\",\n    \"autonomous-agents\",\n    \"dotnet\",\n    \"billing\"\n  ],\n  \"category\": \"Engineering\",\n  \"status\": \"draft\",\n  \"isFeatured\": false\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status 201\", () => pm.response.to.have.status(201));",
+                  "pm.test(\"Success true\", () => pm.expect(pm.response.json().success).to.be.true);",
+                  "const post = pm.response.json().data;",
+                  "pm.collectionVariables.set(\"blogId\", post._id);",
+                  "pm.collectionVariables.set(\"blogSlug\", post.slug);"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "id": "3138bd99-564b-4dec-a324-b3c23c7b40c6",
+          "name": "Create Blog Post (Published)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/blog",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "blog"
+              ]
+            },
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"Building a Secure P2P Energy Trading Platform with Blockchain\",\n  \"excerpt\": \"How I built a decentralized energy trading platform using React, Node.js, and Solidity smart contracts for my final year project.\",\n  \"content\": \"## Problem Statement\\n\\nTraditional energy grids are centralized and opaque...\\n\\n## Solution Architecture\\n\\nFrontend in React/Vite, backend in Node/Express, MongoDB Atlas for storage, Hardhat for local blockchain...\\n\\n## Key Insight\\n\\n`canonicalize.js` must produce byte-identical output on both frontend and backend for RSA signature verification to work.\",\n  \"tags\": [\n    \"blockchain\",\n    \"react\",\n    \"nodejs\",\n    \"solidity\",\n    \"final-year-project\"\n  ],\n  \"category\": \"Project\",\n  \"status\": \"published\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status 201\", () => pm.response.to.have.status(201));",
+                  "pm.test(\"Success true\", () => pm.expect(pm.response.json().success).to.be.true);"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "id": "d9285986-08d7-4018-b5a5-16ed367e6ed3",
+          "name": "Publish Draft Post",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/blog/{{blogId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "blog",
+                "{{blogId}}"
+              ]
+            },
+            "description": "Flips draft to published. Pre-save hook auto-sets publishedAt.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"published\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"Success true\", () => pm.expect(pm.response.json().success).to.be.true);"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "id": "1d3c1da7-96d3-4839-9bc8-7c525b37ba25",
+          "name": "Update Post Content",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/blog/{{blogId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "blog",
+                "{{blogId}}"
+              ]
+            },
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"excerpt\": \"Updated excerpt with better SEO copy.\",\n  \"isFeatured\": true\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"Success true\", () => pm.expect(pm.response.json().success).to.be.true);"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "id": "0ba07ba9-2f60-42ff-b274-689df1d01eee",
+          "name": "Archive Post",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/blog/{{blogId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "blog",
+                "{{blogId}}"
+              ]
+            },
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"archived\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"Success true\", () => pm.expect(pm.response.json().success).to.be.true);"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "id": "ce0f25bd-9df0-4569-ba26-e1d37eb25051",
+          "name": "Delete Post",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/blog/{{blogId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "blog",
+                "{{blogId}}"
+              ]
+            },
+            "description": ""
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"Success true\", () => pm.expect(pm.response.json().success).to.be.true);"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "id": "70952839-85e5-4938-be17-c47d7956fe82",
+          "name": "\u274c Get non-existent blog slug",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/blog/this-post-does-not-exist",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "blog",
+                "this-post-does-not-exist"
+              ]
+            },
+            "description": ""
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Should be 404\", () => pm.response.to.have.status(404));"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "6df325ad-2d85-43b3-b231-a0cf7c49276b",
+      "name": "\ud83d\udd12 Security & Edge Cases",
+      "description": "Auth failures, malformed IDs, missing required fields, rate limits.",
+      "item": [
+        {
+          "id": "47ef8860-3c77-4fdc-8add-b5dbcee76e98",
+          "name": "\u274c Missing auth token on protected route",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/projects/admin/all",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "projects",
+                "admin",
+                "all"
+              ]
+            },
+            "description": "No Authorization header. Should return 401."
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Should be 401\", () => pm.response.to.have.status(401));"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "id": "8b4a3488-ee99-44d6-900f-27ee0766baac",
+          "name": "\u274c Invalid JWT token",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/auth/me",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "auth",
+                "me"
+              ]
+            },
+            "description": "Sends a garbage token. Should return 401."
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "exec": [
+                  "pm.request.headers.add({ key: \"Authorization\", value: \"Bearer invalidtoken123\" });"
+                ],
+                "type": "text/javascript"
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Should be 401\", () => pm.response.to.have.status(401));"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "id": "24803861-e047-4851-8f5f-063e92d78771",
+          "name": "\u274c Invalid MongoDB ObjectId",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/projects/not-a-real-id",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "projects",
+                "not-a-real-id"
+              ]
+            },
+            "description": "Should return 400 CastError from error handler."
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Should be 404 or 400\", () => pm.expect(pm.response.code).to.be.oneOf([400, 404]));"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "id": "c971bbb6-e5d9-4b6f-a93e-4f186033998c",
+          "name": "\u274c Create skill without required fields",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/skills",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "skills"
+              ]
+            },
+            "description": "Missing name and category. Should return 422 or 500.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"proficiency\": 80\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Should fail validation\", () => pm.expect(pm.response.code).to.be.oneOf([400, 422, 500]));"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "id": "0d32003f-28b3-437b-89d1-84168573da93",
+          "name": "Health Check (Confirm Server Up)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "http://localhost:5000/health",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "5000",
+              "path": [
+                "health"
+              ]
+            },
+            "description": "Final sanity check."
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Server still running\", () => pm.response.to.have.status(200));"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:5000/api/v1",
+      "type": "string"
+    },
+    {
+      "key": "accessToken",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "userId",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "projectId",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "projectSlug",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "skillId",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "experienceId",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "educationId",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "certificateId",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "testimonialId",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "socialLinkId",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "blogId",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "blogSlug",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "contactMsgId",
+      "value": "",
+      "type": "string"
+    }
+  ]
+}

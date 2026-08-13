@@ -35,4 +35,13 @@ export const resumeStorage = new CloudinaryStorage({
   },
 });
 
-export { cloudinary };
+export const genericStorage = new CloudinaryStorage({
+  cloudinary,
+  params: {
+    folder: "portfolio/uploads",
+    allowed_formats: ["jpg", "jpeg", "png", "webp", "gif", "pdf", "mp4"],
+    resource_type: "auto",
+  },
+});
+
+export { cloudinary };
