@@ -1,0 +1,12 @@
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.22",
+  "base_commit_sha": "0042f01cf3db448e7ea2f622bad3cc122b4ca142",
+  "prompts": {},
+  "humans": {
+    "h_4057e5d6aad66c": {
+      "author": "mpawar <mpawar@cogitate.com>"
+    }
+  }
+}
