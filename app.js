@@ -10,6 +10,9 @@ import { sanitizeInput } from "./src/middleware/sanitize.middleware.js";
 
 const app = express();
 
+// Trust reverse proxy headers (required for Render / Vercel / Heroku deployments with express-rate-limit)
+app.set("trust proxy", 1);
+
 app.use(helmet({
   crossOriginResourcePolicy: { policy: "cross-origin" }
 }));
