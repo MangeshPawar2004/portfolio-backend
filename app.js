@@ -24,6 +24,7 @@ app.use(cors({
     'http://localhost:5174',
     'https://your-portfolio.vercel.app',
     process.env.CLIENT_URL,
+    process.env.FRONTEND_URL
   ].filter(Boolean),
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE'],
